@@ -4,6 +4,14 @@ dataset:
     path: /workspace/Kaggle/statoil-iceberg/data
     img_size: 75
     img_nbands: 3
+image_processing:
+    zoom_range: 0.
+    rotation_range: 0
+    fill_mode: reflect
+    horizontal_flip: False
+    vertical_flip: False
+    width_shift_range: 0.
+    height_shift_range: 0.
 model:
     name: DenseNet
     kernel_size: 3
@@ -14,7 +22,7 @@ optim:
     loss: binary_crossentropy
     metrics: 
         - accuracy
-    init_lr: 0.1
+    init_lr: 0.001
     epochs: 2000
     batch_size: 8192
 

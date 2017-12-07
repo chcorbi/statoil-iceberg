@@ -25,12 +25,10 @@ if __name__ == "__main__":
     parser.add_argument('--parallelize', action='store_true', help="Parallelize model in GPU")
     parser.add_argument('--resume', action='store_true', help="Load model from a previous experiment")
     parser.add_argument('--continuing', action='store_true', help="Continue training")
-
     args = parser.parse_args()
 
     if 'CUDA_VISIBLE_DEVICES' in os.environ:
         gpu_list = os.environ['CUDA_VISIBLE_DEVICES']
-
         logger.info('Working on GPUs #%s' %gpu_list)
         gpu_list = gpu_list.split(',')
 
@@ -65,30 +63,35 @@ if __name__ == "__main__":
     print('training', train_df.shape, 'loaded', train_images.shape)
 
    
-    datagen = ImageDataGenerator(
-    rotation_range=90,
-    vertical_flip=True,
-    horizontal_flip=True,
-    fill_mode='reflect')
+    datagen = ImageDataGenerator(rotation_range=options['image_processing']['rotation_range'],
+                                 vertical_flip=options['image_processing']['vertical_flip'],
+                                 horizontal_flip=options['image_processing']['horizontal_flip'],
+                                 fill_mode=options['image_processing']['fill_mode'],
+                                 featurewise_center=True,
+                                 featurewise_std_normalization=True)
+
+
 
     for i in range(options['model']['stacking']):
         logger.info ('Training %d/%d' %((i+1), options['model']['stacking']))
         logger.info('Splitting train and val images')
         X_train, X_valid, y_train, y_valid = train_test_split(train_images,
                                                        train_df['is_iceberg'],
-                                                        random_state = i*100,
+                                                        random_state = i*101,
                                                         test_size = 0.20
                                                        )
         print('Train', X_train.shape, y_train.shape)
         print('Validation', X_valid.shape, y_valid.shape)
 
+        logger.info('Fitting generator')
+        datagen.fit(X_train)
+        
         logger.info('Build model')
         model_wrapper = modelw.get_wrapper(options)
 
         if args.resume:
             logger.info('Resume model')
-            model_wrapper.load_model(os.path.join(options['dir_logs'], 'model_%d.h5' %i))
-            
+            model_wrapper.load_model(i)
         
         if args.parallelize:
             logger.info('Parallelizing model on %d GPUs' %len(gpu_list))
@@ -98,10 +101,9 @@ if __name__ == "__main__":
                 parallelizer = Parallelizer(gpu_list=range(0,len(gpu_list)))
                 model_wrapper.model = parallelizer.transform(model_wrapper.model)
 
+        
         if args.continuing:
             logger.warning('Continue training with saved state')
-            logger.warning('Supposing using weights, recompiling')
-            model_wrapper.set_optimizer()
         else:
             if args.resume:
                 logger.warning('Setting new state for loaded model')
@@ -115,11 +117,13 @@ if __name__ == "__main__":
         logger.info('Start fitting model')
         model_wrapper.model.fit_generator(datagen.flow(X_train, y_train, batch_size=options['optim']['batch_size']),
                         steps_per_epoch= 10* len(X_train) // options['optim']['batch_size'],
-                            epochs=options['optim']['epochs'], validation_data=(X_valid, y_valid),
+                            epochs=options['optim']['epochs'],
+                            validation_data=datagen.flow(X_valid, y_valid, batch_size=options['optim']['batch_size']),
                             validation_steps = 50*len(X_valid) // options['optim']['batch_size'],
                             callbacks=callbacks)
 
         logger.info('Validation score')
         score = model_wrapper.model.evaluate(X_valid, y_valid, verbose=1)
-        print('Test loss:', score[0])
-        print('Test accuracy:', score[1])
+        print('Val loss:', score[0])
+        print('Val accuracy:', score[1])
+ 

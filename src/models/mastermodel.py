@@ -18,8 +18,9 @@ def rescaling_func(x, bit_size):
 class MasterModel(object):
     def __init__(self, options, **kwargs):
         self.options = options
-        self.input_size = (options['dataset']['img_size'],options['dataset']['img_size'])
-        self.nbands = options['dataset']['img_nbands']
+        self.input_size = (options['dataset']['img_size'],
+                           options['dataset']['img_size'], 
+                           options['dataset']['img_nbands'])
         self.lr = self.options['optim']['init_lr']
 
     def build(self):
@@ -33,29 +34,12 @@ class MasterModel(object):
       assert self.options['optim']['optimizer'] in OPTIMIZERS, 'Optimizer `%s` non implemented' %self.options['optim']['optimizer']
       self.optimizer =  OPTIMIZERS[self.options['optim']['optimizer']]
 
-    def load_from_weights(self, resume_path):
-        model_path = resume_path[:-11]+".h5"
-        if not os.path.isfile(resume_path):
-            if os.path.isfile(model_path):
-                model = keras.models.load_model(model_path, custom_objects={'tf':tf})
-                if isinstance(model.layers[-2], keras.engine.training.Model):
-                  logger.info('Deserializing loaded model')
-                  model = model.layers[-2]
-                #model.save_weights(resume_path)
-                self.model = model
-                return
-        try:
-            self.model.load_weights(resume_path)
-            logger.info("Loading weights file model from %s" % resume_path)
-        except IOError as e:
-            logger.info("No weights file for current model. Will be created.")
-        except:
-            raise
-
-
-    def load_model(self, model_path):
-        logger.info("Load model from %s" % model_path)
-        self.model = keras.models.load_model(model_path, custom_objects={'tf':tf})
+      
+    def load_model(self, i):
+        ckpts = [p for p in os.listdir(self.options['dir_logs']) if "model" in p]
+        resume_path = os.path.join(self.options['dir_logs'], 'model_%d.h5' %i)
+        logger.info("Load model from %s" % resume_path)
+        self.model = keras.models.load_model(resume_path, custom_objects={'tf':tf})
         self.optimizer = self.model.optimizer
         self.loss = self.model.loss
         self.metrics = self.model.metrics
@@ -68,3 +52,4 @@ class MasterModel(object):
         self.model.compile(optimizer=self.optimizer,
                            loss=self.loss,
                            metrics=self.metrics)
+

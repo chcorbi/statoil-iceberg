@@ -1,15 +1,28 @@
 dir_logs:
-    logs/convnet-3bands
+    logs/test-convnet-3bands
 dataset:
     path: /workspace/Kaggle/statoil-iceberg/data
+    img_size: 75
+    img_nbands: 3
+image_processing:
+    zoom_range: 0.
+    rotation_range: 0
+    fill_mode: reflect
+    horizontal_flip: True
+    vertical_flip: True
+    width_shift_range: 0.
+    height_shift_range: 0.
 model:
+    name: ConvNet
     kernel_size: 3
     pool_size: 2
+    stacking: 1
 optim:
-    optimizer: adam
+    optimizer: Adam
     loss: binary_crossentropy
-    metrics:
+    metrics: 
         - accuracy
+    init_lr: 0.001
     epochs: 2000
-    batch_size: 256
+    batch_size: 8192
 

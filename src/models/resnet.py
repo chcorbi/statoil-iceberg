@@ -7,22 +7,23 @@ from keras.layers import Input, Activation, Conv2D, Dropout, Flatten, Dense, Max
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
+from models.mastermodel import MasterModel
+
 import e3_tools.log.logger as modulelogger
 logger = modulelogger.get_logger(__name__, use_color=True, level=modulelogger.logging.INFO)
 
 
-class ResNetModel(object):
+class ResNetModel(MasterModel):
     def __init__(self, options):
         self.options = options
         self.build()
         self.model.summary()
 
     def build(self):
-        img_input = Input(shape=(75,75,3))
+        img_input = Input(shape=self.input_size)
         bn_axis = 3
         
-        x = Conv2D(
-            64, (7, 7), strides=(2, 2), padding='same', name='conv1')(img_input)
+        x = Conv2D(64, (7, 7), strides=(2, 2), padding='same', name='conv1')(img_input)
         x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)
         x = Activation('relu')(x)
         x = MaxPooling2D((3, 3), strides=(2, 2))(x)
@@ -68,14 +69,3 @@ class ResNetModel(object):
         # Create model.
         self.model = Model(img_input, x, name='resnet50')
 
-    def load_model(self, i):
-        ckpts = [p for p in os.listdir(self.options['dir_logs']) if "model" in p]
-        resume_path = os.path.join(self.options['dir_logs'], 'model_%d.h5' %i)
-        logger.info("Load model from %s" % resume_path)
-        self.model = keras.models.load_model(resume_path, custom_objects={'tf':tf})
-        self.optimizer = self.model.optimizer
-        self.loss = self.model.loss
-        self.metrics = self.model.metrics
-        if isinstance(self.model.layers[-2], keras.engine.training.Model):
-           logger.info('Deserializing loaded model')
-           self.model = self.model.layers[-2]

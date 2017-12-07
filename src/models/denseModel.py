@@ -18,23 +18,13 @@ class DenseNetModel(MasterModel):
         self.build()
 
     def build(self):
-        base_model = DenseNetImageNet121(input_shape=(75,75,3), weights=None,
-                                         dropout_rate=0.2)
+        base_model = DenseNetImageNet121(input_shape= self.input_size, weights=None,
+                                         dropout_rate=0.)
         x = base_model.layers[-1].get_output_at(0)
         x = Dense(1, activation='sigmoid')(x)
         self.model = Model(inputs=[base_model.input],outputs=[x])
  
-    def load_model(self, i):
-        ckpts = [p for p in os.listdir(self.options['dir_logs']) if "model" in p]
-        resume_path = os.path.join(self.options['dir_logs'], 'model_%d.h5' %i)
-        logger.info("Load model from %s" % resume_path)
-        self.model = keras.models.load_model(resume_path, custom_objects={'tf':tf})
-        self.optimizer = self.model.optimizer
-        self.loss = self.model.loss
-        self.metrics = self.model.metrics
-        if isinstance(self.model.layers[-2], keras.engine.training.Model):
-           logger.info('Deserializing loaded model')
-           self.model = self.model.layers[-2]
+
 
 
  

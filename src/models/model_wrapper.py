@@ -8,6 +8,6 @@ logger = modulelogger.get_logger(__name__, use_color=True, level=modulelogger.lo
 
 def get_wrapper(options, **kwargs):
     MODEL_NAMES = {"ResNet": ResNetModel, "ConvNet": ConvNetModel,
-                   "DeeperConvNetModel":  DeeperConvNetModel, "DenseNet": DenseNetModel}
+                   "DeeperConvNet":  DeeperConvNetModel, "DenseNet": DenseNetModel}
     assert options['model']['name'] in MODEL_NAMES, 'Model %s non existing' %options['model']['name']
     return MODEL_NAMES[options['model']['name']](options, **kwargs)

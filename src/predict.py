@@ -38,11 +38,9 @@ if __name__ == "__main__":
 
     y_pred = np.zeros(test_images.shape[0])
     
-    for i in range(5):
-        logger.info('Predict %d/5' %(i+1))
-        model_wrapper = ConvNetModel(options)
-        #model_wrapper = ResNetModel(options)
-        #model_wrapper = DenseNetModel(options)
+    for i in range(options['model']['stacking']):
+        logger.info('Predict %d/%d' %((i+1), options['model']['stacking']))
+        model_wrapper = modelw.get_wrapper(options)
         model_wrapper.load_model(i)
         
         if args.parallelize:
@@ -52,13 +50,11 @@ if __name__ == "__main__":
             else:
                 parallelizer = Parallelizer(gpu_list=range(0,len(gpu_list)))
                 model_wrapper.model = parallelizer.transform(model_wrapper.model)
-                
-        
         
         logger.info('Predict test set')
         y_pred += model_wrapper.model.predict(test_images).reshape((y_pred.shape[0]))
 
-    y_pred /= 5
+    y_pred /= options['model']['stacking']
     
     logger.info('Write csv file')
     submission = pd.DataFrame()
