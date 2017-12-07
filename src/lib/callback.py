@@ -5,13 +5,13 @@ import e3_tools.log.logger as modulelogger
 logger = modulelogger.get_logger(__name__, use_color=False, level=modulelogger.logging.INFO)
 
        
-def define_callbacks(ckpt_rootpath):
-    ckpt_callback = ModelCheckpoint(os.path.join(ckpt_rootpath,'model.h5'),
+def define_callbacks(ckpt_rootpath, i):
+    ckpt_callback = ModelCheckpoint(os.path.join(ckpt_rootpath,'model_%d.h5' %i),
                                     monitor='val_loss',
                                     save_best_only=True,
-                                    mode='auto',save_weights_only=False) # Saves the model weights after each epoch
-    earlystopping_callback = EarlyStopping(monitor='val_loss',
-                                           patience=20,
+                                    mode='min',save_weights_only=False) # Saves the model weights after each epoch
+    earlystopping_callback = EarlyStopping(monitor='val_loss', mode='min',
+                                           patience=100,
                                            verbose=1) # Early stopping
     reducelr_callback = ReduceLROnPlateau(patience=5,
                                           verbose=1) # LR decay 

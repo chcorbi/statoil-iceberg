@@ -1,12 +1,14 @@
 import os
 import argparse
 import yaml
+import numpy as np
 import pandas as pd
 import e3_tools.fileSystem.utils as utils
 
 import callback
 from resnet import ResNetModel
 from convnet import ConvNetModel
+from denseModel import DenseNetModel
 from dataset import load_and_format
 from parallelizer import Parallelizer
 
@@ -23,29 +25,41 @@ if __name__ == "__main__":
 
     if 'CUDA_VISIBLE_DEVICES' in os.environ:
         gpu_list = os.environ['CUDA_VISIBLE_DEVICES'] 
-        logger.info('Working on GPUs #%s' %str(gpu_list)) 
+        logger.info('Working on GPUs #%s' %str(gpu_list))
+    else:
+        gpu_list = []
 
     with open(os.path.join(args.config_path,'args.yaml'), 'r') as handle:
         options = yaml.load(handle)
-       
-    model_wrapper = ConvNetModel(options)
-    model_wrapper.load_model()
-
-    if args.parallelize:
-        logger.info('Parallelizing model on GPUs')
-        if len(gpu_list)==1:
-            logger.warning('Cannot parallelize, available GPUS < 2')
-        else:
-            parallelizer = Parallelizer(gpu_list=range(0,len(gpu_list)))
-            model_wrapper.model = parallelizer.transform(model_wrapper.model)
-            
+        
     logger.info('Loading test dataset')
     test_df, test_images = load_and_format(os.path.join(options['dataset']['path'], 'test.json'))
     print('test', test_df.shape, 'loaded', test_images.shape)
-    
-    logger.info('Predict test set')
-    y_pred = model_wrapper.model.predict(test_images)
 
+    y_pred = np.zeros(test_images.shape[0])
+    
+    for i in range(5):
+        logger.info('Predict %d/5' %(i+1))
+        model_wrapper = ConvNetModel(options)
+        #model_wrapper = ResNetModel(options)
+        #model_wrapper = DenseNetModel(options)
+        model_wrapper.load_model(i)
+        
+        if args.parallelize:
+            logger.info('Parallelizing model on GPUs')
+            if len(gpu_list)==1:
+                logger.warning('Cannot parallelize, available GPUS < 2')
+            else:
+                parallelizer = Parallelizer(gpu_list=range(0,len(gpu_list)))
+                model_wrapper.model = parallelizer.transform(model_wrapper.model)
+                
+        
+        
+        logger.info('Predict test set')
+        y_pred += model_wrapper.model.predict(test_images).reshape((y_pred.shape[0]))
+
+    y_pred /= 5
+    
     logger.info('Write csv file')
     submission = pd.DataFrame()
     submission['id']=test_df['id']

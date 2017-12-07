@@ -1,15 +1,16 @@
 dir_logs:
-    logs/convnet-3bands
+    logs/test-densenet-3bands
 dataset:
     path: /workspace/Kaggle/statoil-iceberg/data
 model:
+    name: DenseNet
     kernel_size: 3
     pool_size: 2
 optim:
     optimizer: adam
     loss: binary_crossentropy
-    metrics:p 
+    metrics: 
         - accuracy
-    epochs: 200
-    batch_size: 64
+    epochs: 2000
+    batch_size: 8192
 

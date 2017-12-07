@@ -66,12 +66,12 @@ if __name__ == "__main__":
 
    
     datagen = ImageDataGenerator(
-    rotation_range=0,
+    rotation_range=90,
     vertical_flip=True,
     horizontal_flip=True,
     fill_mode='reflect')
 
-    for i in range(5):
+    for i in range(1):
         logger.info ('Training %d/5' %(i+1))
         logger.info('Splitting train and val images')
         X_train, X_valid, y_train, y_valid = train_test_split(train_images,

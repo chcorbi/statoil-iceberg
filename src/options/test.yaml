@@ -1,0 +1,15 @@
+dir_logs:
+    logs/test-convnet-3bands-norot
+dataset:
+    path: /workspace/Kaggle/statoil-iceberg/data
+model:
+    kernel_size: 3
+    pool_size: 2
+optim:
+    optimizer: adam
+    loss: binary_crossentropy
+    metrics: 
+        - accuracy
+    epochs: 2000
+    batch_size: 8192
+

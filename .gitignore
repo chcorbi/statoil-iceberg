@@ -1,0 +1,10 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Folder to exclude
+src/logs/
+logs/
+
+# Ipython checkpoints
+.ipynb_checkpoints/

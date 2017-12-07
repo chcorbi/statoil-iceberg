@@ -58,9 +58,9 @@ class ConvNetModel(object):
 
         self.model = Model(inputs=[inputs], outputs=[ac8])
 
-    def load_model(self):
+    def load_model(self, i):
         ckpts = [p for p in os.listdir(self.options['dir_logs']) if "model" in p]
-        resume_path = os.path.join(self.options['dir_logs'], 'model.h5')
+        resume_path = os.path.join(self.options['dir_logs'], 'model_%d.h5' %i)
         logger.info("Load model from %s" % resume_path)
         self.model = keras.models.load_model(resume_path, custom_objects={'tf':tf})
         self.optimizer = self.model.optimizer
