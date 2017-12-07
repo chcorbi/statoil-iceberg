@@ -66,13 +66,13 @@ if __name__ == "__main__":
 
    
     datagen = ImageDataGenerator(
-    rotation_range=0,
+    rotation_range=90,
     vertical_flip=True,
     horizontal_flip=True,
     fill_mode='reflect')
 
-    for i in range(5):
-        logger.info ('Training %d/5' %(i+1))
+    for i in range(options['model']['stacking']):
+        logger.info ('Training %d/%d' %((i+1), options['model']['stacking']))
         logger.info('Splitting train and val images')
         X_train, X_valid, y_train, y_valid = train_test_split(train_images,
                                                        train_df['is_iceberg'],
@@ -84,6 +84,11 @@ if __name__ == "__main__":
 
         logger.info('Build model')
         model_wrapper = modelw.get_wrapper(options)
+
+        if args.resume:
+            logger.info('Resume model')
+            model_wrapper.load_model(os.path.join(options['dir_logs'], 'model_%d.h5' %i))
+            
         
         if args.parallelize:
             logger.info('Parallelizing model on %d GPUs' %len(gpu_list))
@@ -93,10 +98,16 @@ if __name__ == "__main__":
                 parallelizer = Parallelizer(gpu_list=range(0,len(gpu_list)))
                 model_wrapper.model = parallelizer.transform(model_wrapper.model)
 
-    
-        model_wrapper.model.compile(loss=options['optim']['loss'],
-            optimizer=options['optim']['optimizer'],
-            metrics=options['optim']['metrics'])
+        if args.continuing:
+            logger.warning('Continue training with saved state')
+            logger.warning('Supposing using weights, recompiling')
+            model_wrapper.set_optimizer()
+        else:
+            if args.resume:
+                logger.warning('Setting new state for loaded model')
+            model_wrapper.set_optimizer()
+
+        model_wrapper.compile()
 
         callbacks = callback.define_callbacks(options['dir_logs'], i)
                 

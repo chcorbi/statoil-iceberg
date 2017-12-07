@@ -4,7 +4,7 @@ __pycache__/
 
 # Folder to exclude
 src/logs/
-logs/
+data/
 
 # Ipython checkpoints
 .ipynb_checkpoints/
