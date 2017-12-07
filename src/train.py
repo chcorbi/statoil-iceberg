@@ -70,8 +70,6 @@ if __name__ == "__main__":
                                  featurewise_center=True,
                                  featurewise_std_normalization=True)
 
-
-
     for i in range(options['model']['stacking']):
         logger.info ('Training %d/%d' %((i+1), options['model']['stacking']))
         logger.info('Splitting train and val images')
@@ -123,7 +121,9 @@ if __name__ == "__main__":
                             callbacks=callbacks)
 
         logger.info('Validation score')
+        for j in range(len(X_valid)):
+            X_valid[j] = datagen.standardize(X_valid[j])
         score = model_wrapper.model.evaluate(X_valid, y_valid, verbose=1)
         print('Val loss:', score[0])
         print('Val accuracy:', score[1])
- 
+

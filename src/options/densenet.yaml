@@ -6,17 +6,17 @@ dataset:
     img_nbands: 3
 image_processing:
     zoom_range: 0.
-    rotation_range: 0
+    rotation_range: 90
     fill_mode: reflect
-    horizontal_flip: False
-    vertical_flip: False
+    horizontal_flip: True
+    vertical_flip: True
     width_shift_range: 0.
     height_shift_range: 0.
 model:
     name: DenseNet
     kernel_size: 3
     pool_size: 2
-    stacking: 1
+    stacking: 10
 optim:
     optimizer: Adam
     loss: binary_crossentropy

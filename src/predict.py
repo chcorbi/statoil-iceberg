@@ -4,13 +4,12 @@ import yaml
 import numpy as np
 import pandas as pd
 import e3_tools.fileSystem.utils as utils
+from keras.preprocessing.image import ImageDataGenerator
 
-import callback
-from resnet import ResNetModel
-from convnet import ConvNetModel
-from denseModel import DenseNetModel
-from dataset import load_and_format
-from parallelizer import Parallelizer
+from lib import dataset
+from lib import callback
+from lib.parallelizer import Parallelizer
+from models import model_wrapper as modelw
 
 import e3_tools.log.logger as modulelogger
 logger = modulelogger.get_logger(__name__, use_color=True, level=modulelogger.logging.INFO)
@@ -33,11 +32,26 @@ if __name__ == "__main__":
         options = yaml.load(handle)
         
     logger.info('Loading test dataset')
-    test_df, test_images = load_and_format(os.path.join(options['dataset']['path'], 'test.json'))
+    test_df, test_images = dataset.load_and_format(os.path.join(options['dataset']['path'], 'test.json'))
     print('test', test_df.shape, 'loaded', test_images.shape)
 
-    y_pred = np.zeros(test_images.shape[0])
+    train_df, train_images = dataset.load_and_format(os.path.join(options['dataset']['path'], 'train.json'))
+    print('training', train_df.shape, 'loaded', train_images.shape)
+    datagen = ImageDataGenerator(rotation_range=options['image_processing']['rotation_range'],
+                                 vertical_flip=options['image_processing']['vertical_flip'],
+                                 horizontal_flip=options['image_processing']['horizontal_flip'],
+                                 fill_mode=options['image_processing']['fill_mode'],
+                                 featurewise_center=True,
+                                 featurewise_std_normalization=True)
     
+    logger.info('Fitting generator')
+    datagen.fit(train_images)
+
+    logger.info('Standardizing test images')
+    y_pred = np.zeros(test_images.shape[0])
+    for j in range(len(test_images)):
+        test_images[j] = datagen.standardize(test_images[j])
+        
     for i in range(options['model']['stacking']):
         logger.info('Predict %d/%d' %((i+1), options['model']['stacking']))
         model_wrapper = modelw.get_wrapper(options)

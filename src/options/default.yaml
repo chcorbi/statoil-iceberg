@@ -16,7 +16,7 @@ model:
     name: ConvNet
     kernel_size: 3
     pool_size: 2
-    stacking: 1
+    stacking: 2
 optim:
     optimizer: Adam
     loss: binary_crossentropy
