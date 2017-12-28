@@ -8,6 +8,7 @@ from keras.preprocessing.image import ImageDataGenerator
 
 from lib import dataset
 from lib import callback
+from lib.gen import CreateGenerator
 from lib.parallelizer import Parallelizer
 from models import model_wrapper as modelw
 
@@ -33,6 +34,7 @@ if __name__ == "__main__":
         
     logger.info('Loading test dataset')
     test_df, test_images = dataset.load_and_format(os.path.join(options['dataset']['path'], 'test.json'))
+    inc_test = np.array(test_df['inc_angle'])
     print('test', test_df.shape, 'loaded', test_images.shape)
 
     train_df, train_images = dataset.load_and_format(os.path.join(options['dataset']['path'], 'train.json'))
@@ -45,12 +47,12 @@ if __name__ == "__main__":
                                  featurewise_std_normalization=True)
     
     logger.info('Fitting generator')
-    datagen.fit(train_images)
+    creategen = CreateGenerator(train_images, options)
 
     logger.info('Standardizing test images')
     y_pred = np.zeros(test_images.shape[0])
     for j in range(len(test_images)):
-        test_images[j] = datagen.standardize(test_images[j])
+        test_images[j] = creategen.datagen.standardize(test_images[j])
         
     for i in range(options['model']['stacking']):
         logger.info('Predict %d/%d' %((i+1), options['model']['stacking']))
@@ -66,7 +68,7 @@ if __name__ == "__main__":
                 model_wrapper.model = parallelizer.transform(model_wrapper.model)
         
         logger.info('Predict test set')
-        y_pred += model_wrapper.model.predict(test_images).reshape((y_pred.shape[0]))
+        y_pred += model_wrapper.model.predict([test_images,inc_test]).reshape((y_pred.shape[0]))
 
     y_pred /= options['model']['stacking']
     

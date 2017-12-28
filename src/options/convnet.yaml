@@ -1,5 +1,5 @@
 dir_logs:
-    logs/test-convnet-3bands
+    logs/test-convnet-3bands-inc
 dataset:
     path: /workspace/Kaggle/statoil-iceberg/data
     img_size: 75
@@ -16,7 +16,7 @@ model:
     name: ConvNet
     kernel_size: 3
     pool_size: 2
-    stacking: 1
+    stacking: 5
 optim:
     optimizer: SGD
     loss: binary_crossentropy

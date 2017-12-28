@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 import keras
 from keras.models import Model
-from keras.layers import Dense
+from keras.layers import Dense, Input, concatenate, Flatten, Reshape
 from models.DenseNet.densenet import DenseNetImageNet121
 
 from models.mastermodel import MasterModel
@@ -19,10 +19,15 @@ class DenseNetModel(MasterModel):
 
     def build(self):
         base_model = DenseNetImageNet121(input_shape= self.input_size, weights='imagenet',
-                                         dropout_rate=0.)
+                                         dropout_rate=0.1)
         x = base_model.layers[-1].get_output_at(0)
-        x = Dense(1, activation='sigmoid')(x)
-        self.model = Model(inputs=[base_model.input],outputs=[x])
+
+        inc_input = Input(shape=(1,))
+        merged = concatenate([Reshape((-1,1))(x),Reshape((-1,1))(inc_input)], axis=1)
+        fl5 = Flatten()(merged)
+        
+        y = Dense(1, activation='sigmoid')(fl5)
+        self.model = Model(inputs=[base_model.input, inc_input],outputs=[y])
  
 
 

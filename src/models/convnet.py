@@ -2,7 +2,8 @@ import os
 import tensorflow as tf
 import keras
 from keras.models import Model
-from keras.layers import Input, Activation, Conv2D, Dropout, Flatten, Dense, MaxPooling2D
+from keras.layers import Input, Activation, Conv2D, Dropout, Reshape, \
+    Flatten, Dense, MaxPooling2D, concatenate
 from keras.layers.normalization import BatchNormalization
 from keras import optimizers
 
@@ -45,7 +46,11 @@ class ConvNetModel(MasterModel):
         pool4 = MaxPooling2D(pool_size=(self.pool_size, self.pool_size))(ac4_1)
         pool4 = Dropout(1e-2)(pool4)
         
-        fl5 = Flatten()(pool4)
+        
+        inc_input = Input(shape=(1,))
+        merged = concatenate([Reshape((-1,1))(pool4),Reshape((-1,1))(inc_input)], axis=1)
+
+        fl5 = Flatten()(merged)
 
         dense6 = Dense(512)(fl5)
         ac6 = Activation('relu')(dense6)
@@ -58,6 +63,6 @@ class ConvNetModel(MasterModel):
         dense8 = Dense(1)(ac7)
         ac8 = Activation('sigmoid')(dense8)
 
-        self.model = Model(inputs=[inputs], outputs=[ac8])
+        self.model = Model(inputs=[inputs, inc_input], outputs=[ac8])
 
  

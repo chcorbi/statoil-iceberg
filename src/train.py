@@ -6,10 +6,10 @@ import sys
 import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from keras.utils.np_utils import to_categorical
-from keras.preprocessing.image import ImageDataGenerator
 
 from lib import dataset
 from lib import callback
+from lib.gen import CreateGenerator
 from lib.parallelizer import Parallelizer
 from models import model_wrapper as modelw
 
@@ -68,29 +68,26 @@ if __name__ == "__main__":
             class_weight = [float(line.rstrip('\n')) for line in f]
     else:    
         class_weight = dataset.compute_class_weight(options['dataset']['path'], train_df)
-
-    datagen = ImageDataGenerator(rotation_range=options['image_processing']['rotation_range'],
-                                 vertical_flip=options['image_processing']['vertical_flip'],
-                                 horizontal_flip=options['image_processing']['horizontal_flip'],
-                                 fill_mode=options['image_processing']['fill_mode'],
-                                 featurewise_center=True,
-                                 featurewise_std_normalization=True)
-
+   
     sss = StratifiedShuffleSplit(n_splits=options['model']['stacking'], test_size=0.2, random_state=42)
 
     for i,(train_index,test_index) in enumerate(sss.split(train_images, train_df['is_iceberg'])):
         logger.info ('Training %d/%d' %((i+1), options['model']['stacking']))
         logger.info('Splitting train and val images')
         X_train, X_valid = train_images[train_index], train_images[test_index]
-        y_train, y_valid =  train_df['is_iceberg'][train_index],  train_df['is_iceberg'][test_index]
+        inc_train, inc_valid = np.array(train_df['inc_angle'][train_index]), np.array(train_df['inc_angle'][test_index])
+        y_train, y_valid =  np.array(train_df['is_iceberg'][train_index]),  np.array(train_df['is_iceberg'][test_index])
         print('Train', X_train.shape, y_train.shape)
         print('Validation', X_valid.shape, y_valid.shape)
 
         logger.info('Fitting generator')
-        datagen.fit(X_train)
+        creategen = CreateGenerator(X_train, options)
+        
+        logger.info('Initialize generator')
+        train_gen = creategen.generator(X_train, inc_train, y_train, batch_size=options['optim']['batch_size'])
 
         for j in range(len(X_valid)):
-            X_valid[j] = datagen.standardize(X_valid[j])
+            X_valid[j] = creategen.datagen.standardize(X_valid[j])
             
         logger.info('Build model')
         model_wrapper = modelw.get_wrapper(options)
@@ -121,14 +118,14 @@ if __name__ == "__main__":
                 
         # fits the model on batches with real-time data augmentation:
         logger.info('Start fitting model')
-        model_wrapper.model.fit_generator(datagen.flow(X_train, y_train, batch_size=options['optim']['batch_size']),
+        model_wrapper.model.fit_generator(train_gen,
                         steps_per_epoch= len(X_train) // options['optim']['batch_size'],
                                           epochs=options['optim']['epochs'], class_weight=class_weight,
-                                          validation_data=(X_valid, y_valid), callbacks=callbacks)
+                                          validation_data=([X_valid, inc_valid], y_valid), callbacks=callbacks)
 
         logger.info('Validation score')
 
-        score = model_wrapper.model.evaluate(X_valid, y_valid, verbose=1)
+        score = model_wrapper.model.evaluate([X_valid,inc_valid], y_valid, verbose=1)
         print('Val loss:', score[0])
         print('Val accuracy:', score[1])
 

@@ -9,6 +9,8 @@ logger = modulelogger.get_logger(__name__, use_color=True, level=modulelogger.lo
 
 def load_and_format(in_path):
     out_df = pd.read_json(in_path)
+    if not out_df['inc_angle'].dtype=='float':
+        out_df.loc[out_df.inc_angle=='na', 'inc_angle'] = 0.0
     out_images_1=np.array([np.array(band).astype(np.float32).reshape(75, 75) for band in out_df["band_1"]])
     out_images_2=np.array([np.array(band).astype(np.float32).reshape(75, 75) for band in out_df["band_2"]])
     out_images = np.concatenate([out_images_1[:, :, :, np.newaxis], out_images_2[:, :, :, np.newaxis],

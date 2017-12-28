@@ -31,13 +31,13 @@ class CustomLearningRateScheduler(Callback):
     def on_epoch_begin(self, epoch, logs=None):
         if not hasattr(self.model.optimizer, 'lr'):
             raise ValueError('Optimizer must have a "lr" attribute.')
-        if epoch%200==0 and epoch!=0:
+        if epoch%500==0 and epoch!=0:
             lr = K.get_value(self.model.optimizer.lr)
             K.set_value(self.model.optimizer.lr, lr*self.decay)
             logger.warning("Learning rate changed to {}".format(lr*self.decay))
     
         
-def define_callbacks(ckpt_rootpath):
+def define_callbacks(ckpt_rootpath, i):
     """Define Keras callbacks for training time.
 
     Args:
@@ -48,10 +48,13 @@ def define_callbacks(ckpt_rootpath):
 
     """
     # Saves the model weights after each epoch
-    ckpt_callback = SerializeModelCheckpoint(os.path.join(ckpt_rootpath,'model_weights.h5'),
-                                                          save_weights_only=True) 
+    ckpt_callback = ModelCheckpoint(os.path.join(ckpt_rootpath,'model_%d.h5' %i),
+                                    monitor='val_loss',
+                                    save_best_only=True,
+                                    mode='min', save_weights_only=False) 
     earlystopping_callback = EarlyStopping(monitor='loss',
-                                           patience=10,
+                                           patience=200,
+                                           mode='min',
                                            verbose=1) # Early stopping
     reducelr_callback = ReduceLROnPlateau(patience=5,
                                           verbose=1) # LR decay
