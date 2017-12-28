@@ -5,25 +5,27 @@ dataset:
     img_size: 75
     img_nbands: 3
 image_processing:
-    zoom_range: 0.25
-    rotation_range: 90
-    fill_mode: reflect
+    zoom_range: 
+    rotation_range: 20
+    fill_mode: nearest
     horizontal_flip: False
     vertical_flip: False
-    width_shift_range: 0.25
-    height_shift_range: 0.25
+    width_shift_range: 0.1
+    height_shift_range: 0.1
 model:
     name: DeeperConvNet
     kernel_size: 3
     pool_size: 2
-    stacking: 1
+    stacking: 10
 optim:
     optimizer: Adam
     loss: binary_crossentropy
     metrics: 
-        - accuracy
+        - binary_accuracy
     init_lr: 0.001
+    momentum: 0.9
+    decay: 0.00001
     epochs: 2000
-    batch_size: 8192
+    batch_size: 1024
 
 

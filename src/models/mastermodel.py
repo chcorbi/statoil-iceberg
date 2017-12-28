@@ -22,6 +22,8 @@ class MasterModel(object):
                            options['dataset']['img_size'], 
                            options['dataset']['img_nbands'])
         self.lr = self.options['optim']['init_lr']
+        self.momentum = self.options['optim']['momentum']
+        self.decay = self.options['optim']['decay']
 
     def build(self):
         raise NotImplemented

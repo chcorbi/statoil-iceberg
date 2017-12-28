@@ -7,4 +7,5 @@ src/logs/
 data/
 
 # Ipython checkpoints
+*.ipynb
 .ipynb_checkpoints/

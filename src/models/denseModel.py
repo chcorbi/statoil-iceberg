@@ -18,7 +18,7 @@ class DenseNetModel(MasterModel):
         self.build()
 
     def build(self):
-        base_model = DenseNetImageNet121(input_shape= self.input_size, weights=None,
+        base_model = DenseNetImageNet121(input_shape= self.input_size, weights='imagenet',
                                          dropout_rate=0.)
         x = base_model.layers[-1].get_output_at(0)
         x = Dense(1, activation='sigmoid')(x)
