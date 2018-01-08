@@ -31,7 +31,7 @@ class CustomLearningRateScheduler(Callback):
     def on_epoch_begin(self, epoch, logs=None):
         if not hasattr(self.model.optimizer, 'lr'):
             raise ValueError('Optimizer must have a "lr" attribute.')
-        if epoch%500==0 and epoch!=0:
+        if epoch%1400==0 and epoch!=0:
             lr = K.get_value(self.model.optimizer.lr)
             K.set_value(self.model.optimizer.lr, lr*self.decay)
             logger.warning("Learning rate changed to {}".format(lr*self.decay))

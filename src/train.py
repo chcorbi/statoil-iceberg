@@ -69,7 +69,7 @@ if __name__ == "__main__":
     else:    
         class_weight = dataset.compute_class_weight(options['dataset']['path'], train_df)
    
-    sss = StratifiedShuffleSplit(n_splits=options['model']['stacking'], test_size=0.2, random_state=42)
+    sss = StratifiedShuffleSplit(n_splits=options['model']['stacking'], test_size=0.10, random_state=10000)
 
     for i,(train_index,test_index) in enumerate(sss.split(train_images, train_df['is_iceberg'])):
         logger.info ('Training %d/%d' %((i+1), options['model']['stacking']))
