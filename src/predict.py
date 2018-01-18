@@ -68,12 +68,12 @@ if __name__ == "__main__":
                 model_wrapper.model = parallelizer.transform(model_wrapper.model)
         
         logger.info('Predict test set')
-        y_pred += model_wrapper.model.predict([test_images,inc_test]).reshape((y_pred.shape[0]))
-
-    y_pred /= options['model']['stacking']
+        #y_pred += model_wrapper.model.predict([test_images,inc_test]).reshape((y_pred.shape[0]))
+        y_pred = model_wrapper.model.predict([test_images,inc_test]).reshape((y_pred.shape[0]))
+    #y_pred /= options['model']['stacking']
     
-    logger.info('Write csv file')
-    submission = pd.DataFrame()
-    submission['id']=test_df['id']
-    submission['is_iceberg']= y_pred.reshape((y_pred.shape[0]))
-    submission.to_csv(os.path.join(args.config_path, 'submission.csv'), index=False, float_format='%.6f')
+        logger.info('Write csv file')
+        submission = pd.DataFrame()
+        submission['id']=test_df['id']
+        submission['is_iceberg']= y_pred.reshape((y_pred.shape[0]))
+        submission.to_csv(os.path.join(args.config_path, 'submission_%d.csv' %i), index=False, float_format='%.6f')
